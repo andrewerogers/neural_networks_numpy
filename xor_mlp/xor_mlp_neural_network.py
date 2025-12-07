@@ -14,9 +14,11 @@ class NeuralNetwork:
         self.lr = learning_rate
         
         # Initialize weights with small random values
+        # - W1 dimensions (2, 4)
         self.w1 = np.random.randn(input_size, hidden_size) * 0.5
         self.b1 = np.zeros((1, hidden_size))
         
+        # - W2 dimensions (4, 1)
         self.w2 = np.random.randn(hidden_size, output_size) * 0.5
         self.b2 = np.zeros((1, output_size))
     
@@ -39,10 +41,15 @@ class NeuralNetwork:
             Output predictions
         """
         # Hidden layer
+        # - X dimensions: (n_samples, 2)
+        # - X dot W1 dimensions: (n_samples, 2) @ (2, 4) = (n_samples, 4)
         self.z1 = np.dot(X, self.w1) + self.b1
         self.a1 = self.sigmoid(self.z1)
         
         # Output layer
+        # - A1 dimensions: (n_samples, 4)
+        # - W2 dimensions: (4, 1) 
+        # - A1 dot W2 dimensions: (n_samples, 1)
         self.z2 = np.dot(self.a1, self.w2) + self.b2
         self.a2 = self.sigmoid(self.z2)
         
@@ -113,11 +120,13 @@ class NeuralNetwork:
 X = np.array([[0, 0],
               [0, 1],
               [1, 0],
-              [1, 1]])
+              [1, 1],
+              [1, 0]])
 
 y = np.array([[0],
               [1],
               [1],
+              [0],
               [0]])
 
 # Create and train the network
