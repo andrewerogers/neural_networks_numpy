@@ -65,27 +65,52 @@ class NeuralNetwork:
             y: True labels
             output: Network predictions
         """
+
+
         m = X.shape[0]
         
-        # dL/doutput = -(y - output) for MSE loss
-        # But we compute (y - output) and add (gradient ascent on negative loss)
-        # This is equivalent to gradient descent on loss
-        # Chain rule: dL/dz2 = dL/doutput * doutput/dz2
+        """
+        Backward propagation using MSE loss: L = 1/2 * (y - output)^2
+        Computes dL/dW for each layer and updates weights via gradient descent.
+        
+        Network structure (forward):
+        X → [z1=X*w1+b1] → sigmoid(z1) a1 → [z2=a1*w2+b2] → sigmoid(z2) output → Loss
+        
+        Backward pass (chain rule propagation):
+        Loss → dL/doutput → dL/dz2 → dL/da1 → dL/dz1
+        
+        Then compute weight gradients:
+        dL/dw2 = a1^T * dL/dz2,  dL/dw1 = X^T * dL/dz1
+        
+        Args:
+            X: Input data
+            y: True labels
+            output: Network predictions
+        """
+       
+        # MSE Loss: L = 1/2 * (y - output)^2
+        # dL/doutput = -(y - output)
         self.output_error = y - output
+
+        # Chain rule through output sigmoid: dL/dz2 = dL/doutput * sigmoid'(output)
+        # current_partial = previous_partial * local_derivative
         self.output_delta = self.output_error * self.sigmoid_derivative(output)
         
-        # Backpropagate error to hidden layer
-        # dL/da1 = dL/dz2 * dz2/da1 = output_delta * w2^T
+        # Chain rule through hidden layer: dL/da1 = dL/dz2 * (dz2/da1) = dL/dz2 * w2^T
+        # current_partial = prev_partial * local_derivative
         self.hidden_error = self.output_delta.dot(self.w2.T)
-        # dL/dz1 = dL/da1 * da1/dz1
+        
+        # Chain rule through hidden sigmoid: dL/dz1 = dL/da1 * sigmoid'(a1)
         self.hidden_delta = self.hidden_error * self.sigmoid_derivative(self.a1)
         
-        # Compute gradients and update weights
-        # dL/dw2 = a1^T * dL/dz2
+        # Compute weight gradients via chain rule and update:
+        # dL/dw2 = dL/dz2 * (dz2/dw2) = (dL/dz2) * (da1)^T = a1^T * dL/dz2
         self.w2 += self.a1.T.dot(self.output_delta) * self.lr
+        
+        # dL/db2 = sum over samples of dL/dz2 (since each bias affects all samples)
         self.b2 += np.sum(self.output_delta, axis=0, keepdims=True) * self.lr
         
-        # dL/dw1 = X^T * dL/dz1
+        # dL/dw1 = dL/dz1 * (dz1/dw1) = (dL/dz1) * (X)^T = X^T * dL/dz1
         self.w1 += X.T.dot(self.hidden_delta) * self.lr
         self.b1 += np.sum(self.hidden_delta, axis=0, keepdims=True) * self.lr
     
@@ -127,7 +152,7 @@ y = np.array([[0],
               [1],
               [1],
               [0],
-              [0]])
+              [1]])
 
 # Create and train the network
 print("Training Neural Network on XOR Problem...")
